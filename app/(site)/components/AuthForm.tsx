@@ -1,15 +1,16 @@
 "use client";
 
 import axios from "axios";
-import Button from "@/app/components/Button";
-import Input from "../../components/inputs/Input";
+import { signIn, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { BsGithub, BsGoogle } from "react-icons/bs";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import AuthSocialButton from "./AuthSocialButton";
-import { toast } from "react-hot-toast";
-import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+import Input from "@/app/components/inputs/Input";
+import AuthSocialButton from "./AuthSocialButton";
+import Button from "@/app/components/Button";
+import { toast } from "react-hot-toast";
 
 type Variant = "LOGIN" | "REGISTER";
 
@@ -21,7 +22,7 @@ const AuthForm = () => {
 
   useEffect(() => {
     if (session?.status === "authenticated") {
-      router.push("/users");
+      router.push("/conversations");
     }
   }, [session?.status, router]);
 
@@ -51,10 +52,26 @@ const AuthForm = () => {
     if (variant === "REGISTER") {
       axios
         .post("/api/register", data)
-        .then(() => signIn("credentials", data))
+        .then(() =>
+          signIn("credentials", {
+            ...data,
+            redirect: false,
+          })
+        )
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error("회원가입에 실패하였습니다");
+          }
+
+          if (callback?.ok) {
+            toast.success("회원가입에 성공하였습니다");
+            router.push("/conversations");
+          }
+        })
         .catch(() => toast.error("회원가입에 실패하였습니다"))
         .finally(() => setIsLoading(false));
     }
+
     if (variant === "LOGIN") {
       signIn("credentials", {
         ...data,
@@ -65,9 +82,9 @@ const AuthForm = () => {
             toast.error("로그인에 실패하였습니다");
           }
 
-          if (callback?.ok && !callback?.error) {
+          if (callback?.ok) {
             toast.success("로그인에 성공하였습니다");
-            router.push("/users");
+            router.push("/conversations");
           }
         })
         .finally(() => setIsLoading(false));
@@ -80,12 +97,12 @@ const AuthForm = () => {
     signIn(action, { redirect: false })
       .then((callback) => {
         if (callback?.error) {
-          toast.error("로그인에 실패하였습니다");
+          toast.error("계정 연결에 실패하였습니다");
         }
 
         if (callback?.ok) {
-          toast.success("로그인에 성공하였습니다");
-          router.push("/users");
+          toast.success("계정 연결에 성공하였습니다");
+          router.push("/conversations");
         }
       })
       .finally(() => setIsLoading(false));
@@ -93,34 +110,44 @@ const AuthForm = () => {
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+      <div
+        className="
+        bg-white
+          px-4
+          py-8
+          shadow
+          sm:rounded-lg
+          sm:px-10
+        "
+      >
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {variant === "REGISTER" && (
             <Input
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
               id="name"
               label="닉네임"
-              register={register}
-              required
-              errors={errors}
-              disabled={isLoading}
             />
           )}
           <Input
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
             id="email"
             label="이메일"
-            required
-            register={register}
-            errors={errors}
-            disabled={isLoading}
+            type="email"
           />
           <Input
-            id="password"
-            label="비밀번호"
-            required
-            type="password"
+            disabled={isLoading}
             register={register}
             errors={errors}
-            disabled={isLoading}
+            required
+            id="password"
+            label="비밀번호"
+            type="password"
           />
           <div>
             <Button disabled={isLoading} fullWidth type="submit">
@@ -157,7 +184,6 @@ const AuthForm = () => {
             />
           </div>
         </div>
-
         <div
           className="
             flex 
