@@ -78,7 +78,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
         text-gray-500
         "
           >
-            {`Seen by ${seenList}`}
+            {`${seenList} 읽음`}
           </div>
         )}
       </div>
