@@ -9,8 +9,8 @@ import ActiveStatus from "./components/ActiveStatus";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Messenger",
-  description: "Messenger",
+  title: "FeedMoaChat",
+  description: "FeedMoa Chating Application",
 };
 
 export default function RootLayout({
